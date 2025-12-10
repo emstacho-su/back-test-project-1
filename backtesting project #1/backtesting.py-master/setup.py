@@ -50,6 +50,9 @@ if __name__ == '__main__':
                 'tqdm',
                 'ipywidgets',  # for tqdm
             ],
+            'excel': [
+                'xlsxwriter>=3.0',
+            ],
             'dev': [
                 'flake8',
                 'coverage',

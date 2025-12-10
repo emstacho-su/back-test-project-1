@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual envs
+.venv/
+venv/
+
+# Local data (raw/backtest data)
+data/
+eur-jpy Data/
+
+# Generated reports / artifacts
+*.html
+*.xlsx
+
+# VS Code
+.vscode/

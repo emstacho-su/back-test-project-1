@@ -24,6 +24,7 @@ from numpy.random import default_rng
 
 from ._plotting import plot  # noqa: I001
 from ._stats import compute_stats, dummy_stats
+from ._logger import EventLogger
 from ._util import (
     SharedMemoryManager, _as_str, _Indicator, _Data, _batch, _indicator_warmup_nbars,
     _strategy_indicators, patch, try_, _tqdm,
@@ -742,7 +743,8 @@ class Trade:
 
 class _Broker:
     def __init__(self, *, data, cash, spread, commission, margin,
-                 trade_on_close, hedging, exclusive_orders, index):
+                 trade_on_close, hedging, exclusive_orders, index,
+                 logger: Optional[EventLogger] = None):
         assert cash > 0, f"cash should be > 0, is {cash}"
         assert 0 < margin <= 1, f"margin should be between 0 and 1, is {margin}"
         self._data: _Data = data
@@ -772,6 +774,16 @@ class _Broker:
         self.trades: List[Trade] = []
         self.position = Position(self)
         self.closed_trades: List[Trade] = []
+        self._logger = logger
+
+    def _log(self, message: str, *, error: bool = False):
+        if not self._logger:
+            return
+
+        if error:
+            self._logger.error(message)
+        else:
+            self._logger.info(message)
 
     def _commission_func(self, order_size, price):
         return self._commission_fixed + abs(order_size) * price * self._commission_relative
@@ -813,6 +825,10 @@ class _Broker:
                     f"TP ({tp}) < LIMIT ({limit or stop or adjusted_price}) < SL ({sl})")
 
         order = Order(self, size, limit, stop, sl, tp, trade, tag)
+        self._log(
+            f"Queued {'long' if is_long else 'short'} order for {abs(size)} units "
+            f"(limit={limit}, stop={stop}, sl={sl}, tp={tp}, tag={tag})"
+        )
 
         if not trade:
             # If exclusive orders (each new order auto-closes previous orders/position),
@@ -1063,34 +1079,59 @@ class _Broker:
         self._close_trade(close_trade, price, time_index)
 
     def _close_trade(self, trade: Trade, price: float, time_index: int):
-        self.trades.remove(trade)
-        if trade._sl_order:
-            self.orders.remove(trade._sl_order)
-        if trade._tp_order:
-            self.orders.remove(trade._tp_order)
+        try:
+            self.trades.remove(trade)
+            if trade._sl_order:
+                self.orders.remove(trade._sl_order)
+            if trade._tp_order:
+                self.orders.remove(trade._tp_order)
 
-        closed_trade = trade._replace(exit_price=price, exit_bar=time_index)
-        self.closed_trades.append(closed_trade)
-        # Apply commission one more time at trade exit
-        commission = self._commission(trade.size, price)
-        self._cash += trade.pl - commission
-        # Save commissions on Trade instance for stats
-        trade_open_commission = self._commission(closed_trade.size, closed_trade.entry_price)
-        # applied here instead of on Trade open because size could have changed
-        # by way of _reduce_trade()
-        closed_trade._commissions = commission + trade_open_commission
+            closed_trade = trade._replace(exit_price=price, exit_bar=time_index)
+            self.closed_trades.append(closed_trade)
+            # Apply commission one more time at trade exit
+            commission = self._commission(trade.size, price)
+            self._cash += trade.pl - commission
+            # Save commissions on Trade instance for stats
+            trade_open_commission = self._commission(closed_trade.size, closed_trade.entry_price)
+            # applied here instead of on Trade open because size could have changed
+            # by way of _reduce_trade()
+            closed_trade._commissions = commission + trade_open_commission
 
-    def _open_trade(self, price: float, size: int,
-                    sl: Optional[float], tp: Optional[float], time_index: int, tag):
-        trade = Trade(self, size, price, time_index, tag)
-        self.trades.append(trade)
-        # Apply broker commission at trade open
-        self._cash -= self._commission(size, price)
-        # Create SL/TP (bracket) orders.
-        if tp:
-            trade.tp = tp
-        if sl:
-            trade.sl = sl
+            self._log(
+                f"Closed {'long' if trade.is_long else 'short'} trade of {abs(trade.size)} units "
+                f"at {price:.5f} (entry={trade.entry_price:.5f}, tag={trade.tag})"
+            )
+        except Exception as exc:
+            self._log(f"Failed to close trade: {exc}", error=True)
+            raise
+
+     def _open_trade(
+        self,
+        price: float,
+        size: int,
+        sl: Optional[float],
+        tp: Optional[float],
+        time_index: int,
+        tag,
+    ):
+            try:
+            trade = Trade(self, size, price, time_index, tag)
+            self.trades.append(trade)
+            # Apply broker commission at trade open
+            self._cash -= self._commission(size, price)
+            # Create SL/TP (bracket) orders.
+            if tp:
+                trade.tp = tp
+            if sl:
+                trade.sl = sl
+
+            self._log(
+                f"Opened {'long' if trade.is_long else 'short'} trade of {abs(size)} units "
+                f"at {price:.5f} (sl={sl}, tp={tp}, tag={tag})"
+            )
+        except Exception as exc:
+            self._log(f"Failed to open trade: {exc}", error=True)
+            raise
 
 
 class Backtest:
@@ -1170,6 +1211,12 @@ class Backtest:
     [active and ongoing] at the end of the backtest will be closed on
     the last bar and will contribute to the computed backtest statistics.
 
+    Optional logging can be enabled with ``enable_logging``. When turned on,
+    the backtester writes timestamped order lifecycle messages to a log file
+    located under ``~/Desktop/log`` by default. The log filename includes a
+    configurable priority label provided through ``log_priority`` (for example,
+    an order type or indicator name) or an explicit ``log_name``.
+
     .. tip:: Fractional trading
         See also `backtesting.lib.FractionalBacktest` if you want to trade
         fractional units (of e.g. bitcoin).
@@ -1189,7 +1236,11 @@ class Backtest:
                  hedging=False,
                  exclusive_orders=False,
                  finalize_trades=False,
-                 ):
+                 enable_logging: bool = False,
+                 log_priority: Optional[str] = None,
+                 log_dir: Optional[str] = None,
+                 log_name: Optional[str] = None,
+                 logger: Optional[EventLogger] = None,):
         if not (isinstance(strategy, type) and issubclass(strategy, Strategy)):
             raise TypeError('`strategy` must be a Strategy sub-type')
         if not isinstance(data, pd.DataFrame):
@@ -1244,10 +1295,14 @@ class Backtest:
                           stacklevel=2)
 
         self._data: pd.DataFrame = data
+                self._logger = logger or (EventLogger(priority=log_priority, log_dir=log_dir,
+                                              name=log_name)
+                                  if enable_logging or log_priority or log_dir or log_name
+                                  else None)
         self._broker = partial(
             _Broker, cash=cash, spread=spread, commission=commission, margin=margin,
             trade_on_close=trade_on_close, hedging=hedging,
-            exclusive_orders=exclusive_orders, index=data.index,
+            exclusive_orders=exclusive_orders, index=data.index, logger=self._logger,
         )
         self._strategy = strategy
         self._results: Optional[pd.Series] = None

@@ -51,6 +51,47 @@ stats = bt.run()
 bt.plot()
 ```
 
+You can enable lightweight event logging to track order lifecycle events as
+they happen:
+
+```python
+bt_logger = Backtest(
+    GOOG,
+    SmaCross,
+    commission=.002,
+    exclusive_orders=True,
+    enable_logging=True,
+    log_priority="sma-cross",
+)
+logger_stats = bt_logger.run()
+
+print("Log file written to", bt_logger._logger.path)
+```
+
+### Loading data from Excel workbooks
+
+If your historical data starts life in an Excel workbook (e.g., from manually
+logged trades or broker exports), you can normalize it for a `Backtest` with
+`load_excel_ohlcv`:
+
+```python
+from backtesting import Backtest, Strategy, load_excel_ohlcv
+
+df = load_excel_ohlcv(
+    "path/to/data.xlsx",
+    # Automatically matches common column names like "Open Price", "Tick Volume", etc.
+    date_column="Date",
+    time_column="Time",
+    resample_rule="5T",  # optional: aggregate to 5-minute candles
+)
+
+bt = Backtest(df, MyStrategy, cash=10_000)
+stats = bt.run()
+```
+
+The loader will trim whitespace, match common synonyms (e.g., `Open Price`,
+`Tick Volume`), drop malformed rows, and resample to coarser bars when
+requested so even imperfect spreadsheets can be used for analysis.
 Results in:
 
 ```text

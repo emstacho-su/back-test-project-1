@@ -68,7 +68,9 @@ except ImportError:
 from . import lib  # noqa: F401
 from ._plotting import set_bokeh_output  # noqa: F401
 from .backtesting import Backtest, Strategy  # noqa: F401
-
+from .excel_template import EXCEL_SCHEMA, write_backtest_excel  # noqa: F401
+from ._logger import EventLogger  # noqa: F401
+from .data_loader import load_excel_ohlcv  # noqa: F401
 
 # Add overridable backtesting.Pool used for parallel optimization
 def Pool(processes=None, initializer=None, initargs=()):
