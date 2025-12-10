@@ -8,13 +8,10 @@ __pycache__/
 .venv/
 venv/
 
-# Local data (raw/backtest data)
-data/
-eur-jpy Data/
-
 # Generated reports / artifacts
 *.html
 *.xlsx
 
 # VS Code
 .vscode/
+

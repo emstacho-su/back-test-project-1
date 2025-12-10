@@ -1,0 +1,18 @@
+HistData.com (c) 2012
+File: DAT_MT_NZDJPY_M1_202512.csv Status Report
+
+Gap of 253s found between 20251201025101 and 20251201025520.
+Gap of 96s found between 20251201170000 and 20251201170142.
+Gap of 78s found between 20251201170241 and 20251201170406.
+Gap of 62s found between 20251201172627 and 20251201172736.
+Gap of 79s found between 20251202160811 and 20251202160937.
+Gap of 103s found between 20251202163112 and 20251202163301.
+Gap of 236s found between 20251202165959 and 20251202170401.
+Gap of 79s found between 20251202181333 and 20251202181458.
+Gap of 236s found between 20251203170008 and 20251203170410.
+Gap of 98s found between 20251203172830 and 20251203173015.
+Gap of 91s found between 20251204163801 and 20251204163939.
+Gap of 224s found between 20251204170031 and 20251204170421.
+
+Average tick interval: 5048 miliseconds.
+Maximum tick interval found: 253607 miliseconds.

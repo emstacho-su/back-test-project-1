@@ -1,0 +1,13 @@
+HistData.com (c) 2012
+File: DAT_MT_CHFJPY_M1_202512.csv Status Report
+
+Gap of 255s found between 20251201025101 and 20251201025522.
+Gap of 241s found between 20251201165955 and 20251201170403.
+Gap of 65s found between 20251201182725 and 20251201182837.
+Gap of 348s found between 20251202165907 and 20251202170502.
+Gap of 79s found between 20251202181913 and 20251202182039.
+Gap of 239s found between 20251203165956 and 20251203170402.
+Gap of 241s found between 20251204165955 and 20251204170403.
+
+Average tick interval: 5240 miliseconds.
+Maximum tick interval found: 348777 miliseconds.

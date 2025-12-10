@@ -1,0 +1,16 @@
+HistData.com (c) 2012
+File: DAT_MT_AUDCAD_M1_202512.csv Status Report
+
+Gap of 256s found between 20251201025101 and 20251201025523.
+Gap of 106s found between 20251201170039 and 20251201170231.
+Gap of 66s found between 20251201171134 and 20251201171247.
+Gap of 72s found between 20251201171732 and 20251201171851.
+Gap of 130s found between 20251201172538 and 20251201172755.
+Gap of 74s found between 20251202170000 and 20251202170120.
+Gap of 252s found between 20251203170000 and 20251203170418.
+Gap of 62s found between 20251203172247 and 20251203172355.
+Gap of 66s found between 20251204164040 and 20251204164152.
+Gap of 80s found between 20251204170012 and 20251204170138.
+
+Average tick interval: 5269 miliseconds.
+Maximum tick interval found: 256719 miliseconds.
