@@ -145,7 +145,6 @@ def _maybe_resample_data(resample_rule, df, indicators, equity_data, trades):
     df = df.resample(freq, label='right').agg(OHLCV_AGG).dropna()
 
     def try_mean_first(indicator):
-        nonlocal freq
         resampled = indicator.df.fillna(np.nan).resample(freq, label='right')
         try:
             return resampled.mean()

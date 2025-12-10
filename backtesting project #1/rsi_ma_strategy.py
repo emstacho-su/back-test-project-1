@@ -263,7 +263,8 @@ if __name__ == "__main__":
     # ===== CONFIGURATION =====
     
     # Path to your data (adjust if needed)
-    DATA_PATH = Path(r"C:\Users\estac\OneDrive - Syracuse University\trading\backtesting project #1\eur-jpy Data")
+    # Use the existing `data/eur-jpy Data` folder inside the repo workspace
+    DATA_PATH = Path(r"C:\Users\estac\OneDrive - Syracuse University\trading\backtesting project #1\data\eur-jpy Data")
     
     # Choose which data to load:
     # Option 1: Single file (2024 full year)

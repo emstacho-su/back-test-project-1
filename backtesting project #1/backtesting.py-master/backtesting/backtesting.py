@@ -1105,7 +1105,7 @@ class _Broker:
             self._log(f"Failed to close trade: {exc}", error=True)
             raise
 
-     def _open_trade(
+    def _open_trade(
         self,
         price: float,
         size: int,
@@ -1114,7 +1114,7 @@ class _Broker:
         time_index: int,
         tag,
     ):
-            try:
+        try:
             trade = Trade(self, size, price, time_index, tag)
             self.trades.append(trade)
             # Apply broker commission at trade open
@@ -1295,7 +1295,7 @@ class Backtest:
                           stacklevel=2)
 
         self._data: pd.DataFrame = data
-                self._logger = logger or (EventLogger(priority=log_priority, log_dir=log_dir,
+        self._logger = logger or (EventLogger(priority=log_priority, log_dir=log_dir,
                                               name=log_name)
                                   if enable_logging or log_priority or log_dir or log_name
                                   else None)
@@ -1634,7 +1634,6 @@ class Backtest:
             # Avoid recomputing re-evaluations
             @lru_cache()
             def memoized_run(tup):
-                nonlocal maximize, self
                 stats = self.run(**dict(tup))
                 return -maximize(stats)
 
@@ -1643,13 +1642,11 @@ class Backtest:
             _names = tuple(kwargs.keys())
 
             def objective_function(x):
-                nonlocal progress, memoized_run, constraint, _names
                 next(progress)
                 value = memoized_run(tuple(zip(_names, x)))
                 return 0 if np.isnan(value) else value
 
             def cons(x):
-                nonlocal constraint, _names
                 return constraint(AttrDict(zip(_names, x)))
 
             res = sambo.minimize(
